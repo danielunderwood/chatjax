@@ -10,9 +10,9 @@
 // @homepageURL https://github.com/vyznev/chatjax
 // @updateURL   https://github.com/vyznev/chatjax/raw/master/ChatJax%2B%2B.user.js
 // @downloadURL https://github.com/vyznev/chatjax/raw/master/ChatJax%2B%2B.user.js
-// @grant       GM_xmlhttpRequest
-// @grant       GM_getValue
-// @grant       GM_setValue
+// @grant       GM.xmlHttpRequest
+// @grant       GM.setValue
+// @grant       GM.getValue
 // @connect     stackexchange.com
 // @connect     mathoverflow.net
 // ==/UserScript==
@@ -41,7 +41,7 @@
 // unless said parties also agree to it.
 
 
-( function () { try { // start of anonymous wrapper function (needed to restrict variable scope on Opera)
+( async function () { try { // start of anonymous wrapper function (needed to restrict variable scope on Opera)
 
 // Old Opera does not support @match, so re-check that we're on SE chat before doing anything
 if ( location.hostname != 'chat.stackexchange.com' ) return;
@@ -143,7 +143,7 @@ var parentURL = match[1] + '/404', siteName = match[2];
 
 // Load cached MathJax config data, purge expired entries:
 var configCacheKey = 'MathJaxConfigCache';
-var configCache = JSON.parse( GM_getValue( configCacheKey ) || "{}" );
+var configCache = JSON.parse( await GM.getValue( configCacheKey ) || "{}" );
 var now = Date.now(), newConfigCache = {}, expired = false;
 for (var site in configCache) {
 	var siteConfig = configCache[site];
@@ -153,7 +153,7 @@ for (var site in configCache) {
 }
 if (expired) {
 	configCache = newConfigCache;
-	GM_setValue( configCacheKey, JSON.stringify( configCache ) );
+	GM.setValue( configCacheKey, JSON.stringify( configCache ) );
 }
 
 // Check if MathJax config for parent site is cached, otherwise load it:
@@ -162,7 +162,7 @@ if ( configCache[siteName] ) {
 	injectChatJax( siteName, configCache[siteName] );
 } else {
 	console.log( 'ChatJax++ retrieving MathJax config from', parentURL );
-	GM_xmlhttpRequest( {
+	GM.xmlHttpRequest( {
 		method: "GET",
 		url: parentURL,
 		headers: { "Accept": "text/html" },
@@ -184,7 +184,7 @@ if ( configCache[siteName] ) {
 
 			console.log( 'ChatJax++ caching MathJax config for ' + siteName + ':', siteConfig );
 			configCache[siteName] = siteConfig;
-			GM_setValue( configCacheKey, JSON.stringify( configCache ) );
+			GM.setValue( configCacheKey, JSON.stringify( configCache ) );
 
 			injectChatJax( siteName, siteConfig );
 		} catch (e) { console.log( 'ChatJax++ error:', e ); } }
